@@ -50,22 +50,19 @@ class PerceptronClassifier:
       for i in range(len(trainingData)):
           self.features = trainingData[i].keys()
           scores = util.Counter()
-          for j in range(len(self.weights)):
-            scorevector = util.Counter()
-            for feature in self.features:
-              scorevector[feature] = self.weights[j][feature] * trainingData[j][feature]
 
-            scores[j] = scorevector.totalCount()
+          for j in range(len(self.weights)):
+            scores[j] = self.weights[j] * trainingData[i]    #dot product is a sum w * f
           guess = scores.argMax()
 
 
 
           if guess == trainingLabels[i]:
             continue                            #guessed right
-          self.weights[guess] -= trainingData[i]                  #decrease weight of guess
-          self.weights[trainingLabels[i]] += trainingData[i]     #increase weight of correct
-    print()
-
+          normvector = trainingData[i]
+          normvector.normalize()
+          self.weights[guess] -= normvector              #decrease weight of guess
+          self.weights[trainingLabels[i]] += normvector     #increase weight of correct
 
   def classify(self, data ):
     """
