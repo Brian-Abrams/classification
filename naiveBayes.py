@@ -59,15 +59,17 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
     To get the list of all possible features or labels, use self.features and 
     self.legalLabels.
     """
-    cOfY = util.Counter()
-    cOfFU = util.Counter()
-    PEst = util.Counter()
+
+    cOfY = util.Counter()     # count of instances of Y
+    cOfFY = util.Counter()    # count of instances of feature (0 or 1) in Y
+    PEst = util.Counter()     # estimation of the prior distribution
     n = float(len(trainingLabels))
     for i in self.legalLabels:
       cOfY[i] = float(trainingLabels.count(i))
       PEst[i] = float(cOfY[i]/n)
-    features = self.features
-    labels = self.legalLabels
+    for i in range(len(trainingData)):
+      for feature in trainingData[i]:
+        cOfFY[trainingData[i][feature], trainingLabels[i]] += 1
 
   def classify(self, testData):
     """
