@@ -54,8 +54,23 @@ class MiraClassifier:
     datum is a counter from features to values for those features
     representing a vector of values.
     """
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
+    for c in Cgrid:
+        for iteration in range(self.max_iterations):
+          print "Starting iteration ", iteration+1, "..."
+          for i in range(len(trainingData)):
+              self.features = trainingData[i].keys()
+              scores = util.Counter()
+
+              for j in range(len(self.weights)):
+                scores[j] = self.weights[j] * trainingData[i]    #dot product is a sum w * f
+              guess = scores.argMax()
+
+              if guess == trainingLabels[i]:
+                continue                            #guessed right
+              normvector = trainingData[i]
+              normvector.normalize()
+              self.weights[guess] -= normvector              #decrease weight of guess
+              self.weights[trainingLabels[i]] += normvector     #increase weight of correct
 
   def classify(self, data ):
     """

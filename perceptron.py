@@ -46,7 +46,7 @@ class PerceptronClassifier:
     # THE AUTOGRADER WILL LIKELY DEDUCT POINTS.
     
     for iteration in range(self.max_iterations):
-      print "Starting iteration ", iteration, "..."
+      print "Starting iteration ", iteration+1, "..."
       for i in range(len(trainingData)):
           self.features = trainingData[i].keys()
           scores = util.Counter()
