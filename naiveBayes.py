@@ -59,15 +59,34 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
     To get the list of all possible features or labels, use self.features and 
     self.legalLabels.
     """
-    cOfY = util.Counter()
-    cOfFU = util.Counter()
-    PEst = util.Counter()
+
+    cOfY = util.Counter()     # count of instances of Y
+    cOfFY = util.Counter()    # count of instances of feature (0 or 1) in Y
+    self.PEst = util.Counter()     # estimation of the prior distribution
     n = float(len(trainingLabels))
+    self.distfeatures = []
     for i in self.legalLabels:
       cOfY[i] = float(trainingLabels.count(i))
-      PEst[i] = float(cOfY[i]/n)
-    features = self.features
-    labels = self.legalLabels
+      self.PEst[i] = float(cOfY[i]/n)
+    for i in range(len(trainingData)):
+      for feature in trainingData[i]:
+        pixel = util.Counter()
+        pixel[feature] = trainingData[i][feature]
+        if pixel[feature] not in self.distfeatures:
+          self.distfeatures.append(pixel[feature])
+        cOfFY[feature, pixel[feature], trainingLabels[i]] += 1
+    self.conditionalprob = util.Counter()
+    for pixel in tuple(self.features):
+      for y in trainingLabels:
+        denominator = 0.0
+        for option in self.distfeatures:
+          denominator += cOfFY[pixel, option, y]
+        for option in self.distfeatures:
+
+          cond = (float(cOfFY[pixel, option, y])) / (denominator)
+          if self.conditionalprob[pixel, option, y]<cond:
+            self.conditionalprob[pixel, option, y] = cond
+    prediction = self.classify(validationData)
 
   def classify(self, testData):
     """
@@ -93,10 +112,12 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
     self.legalLabels.
     """
     logJoint = util.Counter()
-    
-    "*** YOUR CODE HERE ***"
-    util.raiseNotDefined()
-    
+    for label in self.legalLabels:
+      logJoint[label] = math.log(self.PEst[label])
+      for feature in datum:
+        for val in self.distfeatures:
+          prob = self.conditionalprob[feature, val, label]
+          logJoint[label] += math.log(prob)
     return logJoint
   
   def findHighOddsFeatures(self, label1, label2):
