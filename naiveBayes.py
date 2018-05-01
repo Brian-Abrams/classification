@@ -81,6 +81,8 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
                                                                          # at pixel for each y value
 
     # now we do the predictions with each k
+    bestaccuracy = 0
+    bestk = 0
     for k in kgrid:
       self.conditionalprob = util.Counter() # this is a dictionary of P(f|y) for all F pixels
       for pixel in tuple(self.features):
@@ -94,6 +96,17 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
       # validate
       self.conditionalprob    # maybe normalize here? not sure
       prediction = self.classify(validationData)
+      correct = 0
+      for m in range(len(validationLabels)):
+        if prediction[m]==validationLabels[m]:
+          correct+=1
+      accuracy = 100.0*correct/len(validationLabels)
+      if accuracy>bestaccuracy:
+        bestaccuracy = accuracy
+        bestk = k
+      print "For validation data where k=" + str(k) + " accuracy was " + str(accuracy) + "%"
+    print "Best k=" + str(bestk) + " with accuracy " + str(bestaccuracy) + "%"
+    self.k = bestk
     # after this we have to compare the prediction results validation labels
 
   def classify(self, testData):
@@ -123,7 +136,7 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
     for label in self.legalLabels:
       logJoint[label] = math.log(self.PEst[label])     # set up P(y)
       for feature in datum:
-          prob = self.conditionalprob[feature, 1, label]  # add log of each conditional probability INCLUDES
+          prob = self.conditionalprob[feature, datum[feature], label]  # add log of each conditional probability INCLUDES
           logJoint[label] += math.log(prob)               # 0s AND 1s so maybe here is the problem
     return logJoint
   
