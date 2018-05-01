@@ -79,7 +79,6 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
           self.distfeatures.append(pixel[feature])
         count[feature, pixel[feature], trainingLabels[i]] += 1           # counter of number of instances of a feature
                                                                          # at pixel for each y value
-
     # now we do the predictions with each k
     bestaccuracy = 0
     bestk = 0
