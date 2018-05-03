@@ -83,16 +83,8 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
     # now we do the predictions with each k
     bestaccuracy = 0
     bestk = 0
-    bestprob = util.Counter
     for k in kgrid:
-      self.conditionalprob = util.Counter() # this is a dictionary of P(f|y) for all F pixels
-      for pixel in self.features:
-        for y in self.legalLabels:
-          for option in self.distfeatures:
-            cond = (float(self.count[pixel, option, y]) + k) / (self.totalCount[pixel, y] + k)
-            self.conditionalprob[pixel, option, y] = cond
-# validate
-      # maybe normalize here? not sure
+      self.k = k
       prediction = self.classify(validationData)
       correct = 0
       for m in range(len(validationLabels)):
@@ -102,12 +94,10 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
       if accuracy>bestaccuracy:
         bestaccuracy = accuracy
         bestk = k
-        bestprob = self.conditionalprob
       print "For validation data where k=" + str(k) + " accuracy was " + str(accuracy) + "%"
+
     print "Best k=" + str(bestk) + " with accuracy " + str(bestaccuracy) + "%"
     self.k = bestk
-    self.conditionalprob = bestprob
-    # after this we have to compare the prediction results validation labels
 
   def classify(self, testData):
     """
@@ -136,8 +126,8 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
     for label in self.legalLabels:
       logJoint[label] = math.log(self.PEst[label])     # set up P(y)
       for feature in datum:
-          prob = self.conditionalprob[feature, datum[feature], label]  # add log of each conditional probability INCLUDES
-          logJoint[label] += math.log(prob)               # 0s AND 1s so maybe here is the problem
+          prob = (float(self.count[feature, datum[feature], label]) + self.k) / (self.totalCount[feature, label] + len(self.distfeatures) * self.k)
+          logJoint[label] += math.log(prob)
     return logJoint
   
   def findHighOddsFeatures(self, label1, label2):
