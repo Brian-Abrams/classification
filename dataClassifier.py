@@ -16,6 +16,7 @@ import mira
 import samples
 import sys
 import util
+import time
 
 TEST_SET_SIZE = 100
 DIGIT_DATUM_WIDTH=28
@@ -283,7 +284,7 @@ USAGE_STRING = """
 # Main harness code
 
 def runClassifier(args, options):
-
+  t0 = time.time()
   featureFunction = args['featureFunction']
   classifier = args['classifier']
   printImage = args['printImage']
@@ -317,6 +318,8 @@ def runClassifier(args, options):
   # Conduct training and testing
   print "Training..."
   classifier.train(trainingData, trainingLabels, validationData, validationLabels)
+  t1 = time.time()
+  print "Time: "+str(t1-t0)
   print "Validating..."
   guesses = classifier.classify(validationData)
   correct = [guesses[i] == validationLabels[i] for i in range(len(validationLabels))].count(True)
