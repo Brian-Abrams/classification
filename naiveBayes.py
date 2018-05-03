@@ -82,6 +82,7 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
     # now we do the predictions with each k
     bestaccuracy = 0
     bestk = 0
+    bestprob = util.Counter
     for k in kgrid:
       self.conditionalprob = util.Counter() # this is a dictionary of P(f|y) for all F pixels
       for pixel in tuple(self.features):
@@ -93,7 +94,7 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
               cond = (float(count[pixel, option, y]) + k) / (totalCount + k)
               self.conditionalprob[pixel, option, y] = cond
       # validate
-      self.conditionalprob    # maybe normalize here? not sure
+      # maybe normalize here? not sure
       prediction = self.classify(validationData)
       correct = 0
       for m in range(len(validationLabels)):
@@ -103,9 +104,11 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
       if accuracy>bestaccuracy:
         bestaccuracy = accuracy
         bestk = k
+        bestprob = self.conditionalprob
       print "For validation data where k=" + str(k) + " accuracy was " + str(accuracy) + "%"
     print "Best k=" + str(bestk) + " with accuracy " + str(bestaccuracy) + "%"
     self.k = bestk
+    self.conditionalprob = bestprob
     # after this we have to compare the prediction results validation labels
 
   def classify(self, testData):
