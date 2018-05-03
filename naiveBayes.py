@@ -62,8 +62,9 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
     """
 
     cOfY = util.Counter()     # count of instances of Y
-    count = util.Counter()    # count of instances of feature (0 or 1) in Y
+    self.count = util.Counter()    # count of instances of feature (0 or 1) in Y
     self.PEst = util.Counter()     # estimation of the prior distribution
+    self.totalCount = util.Counter()
     n = float(len(trainingLabels))
     self.distfeatures = []
     for i in self.legalLabels:
@@ -77,23 +78,20 @@ class NaiveBayesClassifier(classificationMethod.ClassificationMethod):
         pixel[feature] = trainingData[i][feature]
         if pixel[feature] not in self.distfeatures:
           self.distfeatures.append(pixel[feature])
-        count[feature, pixel[feature], trainingLabels[i]] += 1           # counter of number of instances of a feature
-                                                                         # at pixel for each y value
+        self.count[feature, pixel[feature], trainingLabels[i]] += 1           # counter of number of instances of a feature
+        self.totalCount[feature, trainingLabels[i]] += 1
     # now we do the predictions with each k
     bestaccuracy = 0
     bestk = 0
     bestprob = util.Counter
     for k in kgrid:
       self.conditionalprob = util.Counter() # this is a dictionary of P(f|y) for all F pixels
-      for pixel in tuple(self.features):
-        for y in trainingLabels:
-          totalCount = 0.0 # this is the denominator of the P(f|y) equation
+      for pixel in self.features:
+        for y in self.legalLabels:
           for option in self.distfeatures:
-            totalCount += count[pixel, option, y]
-          for option in self.distfeatures:
-              cond = (float(count[pixel, option, y]) + k) / (totalCount + k)
-              self.conditionalprob[pixel, option, y] = cond
-      # validate
+            cond = (float(self.count[pixel, option, y]) + k) / (self.totalCount[pixel, y] + k)
+            self.conditionalprob[pixel, option, y] = cond
+# validate
       # maybe normalize here? not sure
       prediction = self.classify(validationData)
       correct = 0

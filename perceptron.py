@@ -48,7 +48,6 @@ class PerceptronClassifier:
     for iteration in range(self.max_iterations):
       print "Starting iteration ", iteration+1, "..."
       for i in range(len(trainingData)):
-          self.features = trainingData[i].keys()
           scores = util.Counter()
 
           for j in range(len(self.weights)):
@@ -63,6 +62,18 @@ class PerceptronClassifier:
           normvector.normalize()
           self.weights[guess] -= normvector              #decrease weight of guess
           self.weights[trainingLabels[i]] += normvector     #increase weight of correct
+
+      for i in range(len(validationData)):
+        for j in range(len(self.weights)):
+          scores[j] = self.weights[j] * validationData[i]  # dot product is a sum w * f
+        guess = scores.argMax()
+
+        if guess == validationLabels[i]:
+          continue  # guessed right
+        normvector = validationData[i]
+        normvector.normalize()
+        self.weights[guess] -= normvector  # decrease weight of guess
+        self.weights[validationLabels[i]] += normvector  # increase weight of correct
 
   def classify(self, data ):
     """
