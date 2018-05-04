@@ -67,48 +67,84 @@ def enhancedFeatureExtractorDigit(datum):
     for this datum (datum is of type samples.Datum).
 
     ## DESCRIBE YOUR ENHANCED FEATURES HERE...
-    Detecting edges
-    Calculate number of connected areas
+
+    Non-zero pixels
+    Breaks in horizontal and vertical spaces
+    How much black above center
+    How much black right of center
+    Aspect ratio of digit
+
     ##
     """
     features = basicFeatureExtractorDigit(datum)
 
-    # Test for edges
-    for x in range(1, DIGIT_DATUM_WIDTH):
-        for y in range(1, DIGIT_DATUM_HEIGHT):
-            features[("verti", x, y)] = int(datum.getPixel(x, y) > datum.getPixel(x, y - 1))
-            features[("horiz", x, y)] = int(datum.getPixel(x, y) > datum.getPixel(x - 1, y))
+    # Various counter variables
+    pixels = datum.getPixels()  # All the pixels in the image
+    count = 0  # How many pixel's we've gone through
+    one = 0  # Amount of black pixels
+    gaps = 0  # The amount of gaps in the number
+    topLeft = None  # A holder for the top left pixel
+    above = 0  # Pixels above center
 
-    # Connected region
-    def findAdj(x , y):
-        adjacent = []
-        if x > 0:
-            adjacent.append((x - 1, y))
-        if x < DIGIT_DATUM_WIDTH - 1:
-            adjacent.append((x + 1, y))
-        if y > 0:
-            adjacent.append((x, y - 1))
-        if y < 0:
-            adjacent.append((x, y + 1))
-        return adjacent
+    while count < len(pixels):
+        row = pixels[count]
+        i = 1
+        while i < len(row):
+            if row[i] != 0:
+                one += 1
+                if not topLeft or i < topLeft:
+                    topLeft = i  # Well, this has to be the top left by deduction
+                if i <= (len(pixels) + 1) / 2:  # Top half
+                    above += 1
 
-    connected = set() # Creates a set of ojects. Different from list
-    contiguous = 0
-    for x in xrange(DIGIT_DATUM_WIDTH): # xrange is basically range but better for large loops
-        for y in xrange(DIGIT_DATUM_HEIGHT):
-            if (x, y) not in connected and datum.getPixel(x,y) < 2:
-                contiguous += 1
-                stack = [(x, y)]
-                while stack:
-                    position = stack.pop()
-                    connected.add(position)
-                    for adjacent in findAdj(*position):
-                        if datum.getPixel(*adjacent) < 2 and adjacent not in connected:
-                            stack.append(adjacent)
+            if row[i] != row[i-1]:  # If the pixel below it isn't the same, there's a break
+                gaps += 1
+            i += 1
+        count += 1
 
-    #features["contiguous0"] = contiguous % 2
-    #features["contiguous1"] = (contiguous >> 1) % 2
-    #features["contiguous2"] = (contiguous >> 2) % 2
+    # Now we count the pixels to the right of vertical
+    count = 0
+    topPixel = None
+    right = 0
+
+    while count < len(pixels[0]):
+        column = [p[count] for p in pixels]
+        i = 1
+        while i < len(column):
+            if column[count] != 0:
+                one += 1
+                if not topPixel or i < topPixel:
+                    topPixel = i
+                if i <= (len(pixels[0]) + 1) / 2:
+                    right += 1
+            if column[i] != row[i - 1]:
+                gaps += 1
+            i += 1
+        count += 1
+
+    width = len(pixels[0]) - topLeft * 2
+    height = len(pixels) - topPixel * 2
+    aspect = float(width) / float(height)
+
+    for x in range(5):
+        features[x] = gaps > 175 and 1.0 or 0.0
+
+    for x in range(10):
+        features[(x + 1) * 10] = aspect < 0.69
+
+    for x in range(5):
+        features[-x] = one > 300 and 1.0 or 0.0
+
+    percentAbove = float(above) / one
+
+    for x in range(5):
+        features[-(x + 1) * 10] = percentAbove > 0.35 and 1.0 or 0.0
+
+    percentRight = float(right) / one
+
+    for x in range(1000, 1005):
+        features[x] = percentRight < 0.27 and 1.0 or 0.0
+
     return features
 
 
