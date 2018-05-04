@@ -67,111 +67,48 @@ def enhancedFeatureExtractorDigit(datum):
     for this datum (datum is of type samples.Datum).
 
     ## DESCRIBE YOUR ENHANCED FEATURES HERE...
-
+    Detecting edges
+    Calculate number of connected areas
     ##
     """
-    features = util.Counter()
-    a = datum.getPixels()
-    a = 0
-    b = 0
-    c = 0
-    holder = []
-    black = []
-    coordtest = []
+    features = basicFeatureExtractorDigit(datum)
 
-    for x in range(DIGIT_DATUM_WIDTH):  # Go through the entire image
-        for y in range(DIGIT_DATUM_HEIGHT):
-            if datum.getPixel(x, y) > 0:  # Pixel was returned as anything but 0
-                features[(x, y)] = 1
+    # Test for edges
+    for x in range(1, DIGIT_DATUM_WIDTH):
+        for y in range(1, DIGIT_DATUM_HEIGHT):
+            features[("verti", x, y)] = int(datum.getPixel(x, y) > datum.getPixel(x, y - 1))
+            features[("horiz", x, y)] = int(datum.getPixel(x, y) > datum.getPixel(x - 1, y))
 
-                # Check the pixels surrounding this current pixel
-                holder.append((x, y + 1))
-                holder.append((x - 1, y))
-                holder.append((x + 1, y))
-                holder.append((x, y - 1))
-                black.append((x, y))
-                a += 1
+    # Connected region
+    def findAdj(x , y):
+        adjacent = []
+        if x > 0:
+            adjacent.append((x - 1, y))
+        if x < DIGIT_DATUM_WIDTH - 1:
+            adjacent.append((x + 1, y))
+        if y > 0:
+            adjacent.append((x, y - 1))
+        if y < 0:
+            adjacent.append((x, y + 1))
+        return adjacent
 
-                if x < DIGIT_DATUM_WIDTH/2.0:
-                    features[(-1, -1)] += 1
-                if y < DIGIT_DATUM_HEIGHT/2.0:
-                    features[(-2, -2)] += 1
-                if (x < DIGIT_DATUM_WIDTH/2,0) and (y < DIGIT_DATUM_HEIGHT/2.0):
-                    features[(-3, -3)] += 1
-                    b += 1
-                if (x > DIGIT_DATUM_WIDTH/2.0) and (y < DIGIT_DATUM_HEIGHT/2.0):
-                    features[(-4, -4)] += 1
-                if (x > DIGIT_DATUM_WIDTH / 2.0) and (y > DIGIT_DATUM_HEIGHT / 2.0):
-                    features[(-5, -5)] += 1
-                    c += 1
-                if (x < DIGIT_DATUM_WIDTH / 2.0) and (y > DIGIT_DATUM_HEIGHT / 2.0):
-                    features[(-6, -6)] += 1
-            else:
-                # If pixel is 0
-                features[(x, y)] = 0
+    connected = set() # Creates a set of ojects. Different from list
+    contiguous = 0
+    for x in xrange(DIGIT_DATUM_WIDTH): # xrange is basically range but better for large loops
+        for y in xrange(DIGIT_DATUM_HEIGHT):
+            if (x, y) not in connected and datum.getPixel(x,y) < 2:
+                contiguous += 1
+                stack = [(x, y)]
+                while stack:
+                    position = stack.pop()
+                    connected.add(position)
+                    for adjacent in findAdj(*position):
+                        if datum.getPixel(*adjacent) < 2 and adjacent not in connected:
+                            stack.append(adjacent)
 
-    coordtest = list(set(holder) - set(black))
-    initial = [[(-3, -3)]]
-    print len(coordtest)
-
-    for (x, y) in coordtest:
-        for i in range(len(initial)):
-            for j in range(len(initial[i])):
-                if (x, y) in initial[i][j]:  # If this pixel exists already, add surrounding to row counter
-                    initial[i].append((x, y + 1))
-                    initial[i].append((x - 1, y))
-                    initial[i].append((x + 1, y))
-                    initial[i].append((x, y - 1))
-                    print "Test"
-                else:
-                    # Add surrounding to column counter
-
-                    add = [(x, y + 1), (x, y - 1), (x + 1, y), (x - 1, y)]
-                    initial.append(add)
-
-    if len(initial) < 3:
-        features[(-9, -9)] = 1
-    else:
-        features[(-9, -9)] = 0
-
-    print a
-
-    if features[(-1, -1)] > a / 2.0:
-        features[(-1, -1)] = 1
-    else:
-        features[(-1, -1)] = 0
-
-    if features[(-2, -2)] > a / 2.0:
-        features[(-2, -2)] = 1
-    else:
-        features[(-2, -2)] = 0
-
-    if features[(-3, -3)] > a / 4.0:
-        features[(-3, -3)] = 1
-    else:
-        features[(-3, -3)] = 0
-
-    if features[(-5, -5)] > a / 4.0:
-        features[(-5, -5)] = 1
-    else:
-        features[(-5, -5)] = 0
-
-    if features[(-6, -6)] > a / 4.0:
-        features[(-6, -6)] = 1
-    else:
-        features[(-6, -6)] = 0
-
-    if features[(-4, -4)] > a / 4.0:
-        features[(-4, -4)] = 1
-    else:
-        features[(-4, -4)] = 0
-
-    if b < c:
-        features[-7, -7] = 0
-    else:
-        features[-7, -7] = 1
-
-    print "Done extracting features"
+    #features["contiguous0"] = contiguous % 2
+    #features["contiguous1"] = (contiguous >> 1) % 2
+    #features["contiguous2"] = (contiguous >> 2) % 2
     return features
 
 
