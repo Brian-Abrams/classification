@@ -41,6 +41,7 @@ def basicFeatureExtractorDigit(datum):
         features[(x,y)] = 0
   return features
 
+
 def basicFeatureExtractorFace(datum):
   """
   Returns a set of pixel features indicating whether
@@ -57,72 +58,172 @@ def basicFeatureExtractorFace(datum):
         features[(x,y)] = 0
   return features
 
-def enhancedFeatureExtractorDigit(datum):
-  """
-  Your feature extraction playground.
-  
-  You should return a util.Counter() of features
-  for this datum (datum is of type samples.Datum).
-  
-  ## DESCRIBE YOUR ENHANCED FEATURES HERE...
-  
-  ##
-  """
-  features =  basicFeatureExtractorDigit(datum)
 
-  "*** YOUR CODE HERE ***"
-  
-  return features
+def enhancedFeatureExtractorDigit(datum):
+    """
+    Your feature extraction playground.
+
+    You should return a util.Counter() of features
+    for this datum (datum is of type samples.Datum).
+
+    ## DESCRIBE YOUR ENHANCED FEATURES HERE...
+
+    ##
+    """
+    features = util.Counter()
+    a = datum.getPixels()
+    a = 0
+    b = 0
+    c = 0
+    holder = []
+    black = []
+    coordtest = []
+
+    for x in range(DIGIT_DATUM_WIDTH):  # Go through the entire image
+        for y in range(DIGIT_DATUM_HEIGHT):
+            if datum.getPixel(x, y) > 0:  # Pixel was returned as anything but 0
+                features[(x, y)] = 1
+
+                # Check the pixels surrounding this current pixel
+                holder.append((x, y + 1))
+                holder.append((x - 1, y))
+                holder.append((x + 1, y))
+                holder.append((x, y - 1))
+                black.append((x, y))
+                a += 1
+
+                if x < DIGIT_DATUM_WIDTH/2.0:
+                    features[(-1, -1)] += 1
+                if y < DIGIT_DATUM_HEIGHT/2.0:
+                    features[(-2, -2)] += 1
+                if (x < DIGIT_DATUM_WIDTH/2,0) and (y < DIGIT_DATUM_HEIGHT/2.0):
+                    features[(-3, -3)] += 1
+                    b += 1
+                if (x > DIGIT_DATUM_WIDTH/2.0) and (y < DIGIT_DATUM_HEIGHT/2.0):
+                    features[(-4, -4)] += 1
+                if (x > DIGIT_DATUM_WIDTH / 2.0) and (y > DIGIT_DATUM_HEIGHT / 2.0):
+                    features[(-5, -5)] += 1
+                    c += 1
+                if (x < DIGIT_DATUM_WIDTH / 2.0) and (y > DIGIT_DATUM_HEIGHT / 2.0):
+                    features[(-6, -6)] += 1
+            else:
+                # If pixel is 0
+                features[(x, y)] = 0
+
+    coordtest = list(set(holder) - set(black))
+    initial = [[(-3, -3)]]
+    print len(coordtest)
+
+    for (x, y) in coordtest:
+        for i in range(len(initial)):
+            for j in range(len(initial[i])):
+                if (x, y) in initial[i][j]:  # If this pixel exists already, add surrounding to row counter
+                    initial[i].append((x, y + 1))
+                    initial[i].append((x - 1, y))
+                    initial[i].append((x + 1, y))
+                    initial[i].append((x, y - 1))
+                    print "Test"
+                else:
+                    # Add surrounding to column counter
+
+                    add = [(x, y + 1), (x, y - 1), (x + 1, y), (x - 1, y)]
+                    initial.append(add)
+
+    if len(initial) < 3:
+        features[(-9, -9)] = 1
+    else:
+        features[(-9, -9)] = 0
+
+    print a
+
+    if features[(-1, -1)] > a / 2.0:
+        features[(-1, -1)] = 1
+    else:
+        features[(-1, -1)] = 0
+
+    if features[(-2, -2)] > a / 2.0:
+        features[(-2, -2)] = 1
+    else:
+        features[(-2, -2)] = 0
+
+    if features[(-3, -3)] > a / 4.0:
+        features[(-3, -3)] = 1
+    else:
+        features[(-3, -3)] = 0
+
+    if features[(-5, -5)] > a / 4.0:
+        features[(-5, -5)] = 1
+    else:
+        features[(-5, -5)] = 0
+
+    if features[(-6, -6)] > a / 4.0:
+        features[(-6, -6)] = 1
+    else:
+        features[(-6, -6)] = 0
+
+    if features[(-4, -4)] > a / 4.0:
+        features[(-4, -4)] = 1
+    else:
+        features[(-4, -4)] = 0
+
+    if b < c:
+        features[-7, -7] = 0
+    else:
+        features[-7, -7] = 1
+
+    print "Done extracting features"
+    return features
 
 
 def contestFeatureExtractorDigit(datum):
-  """
-  Specify features to use for the minicontest
-  """
-  features =  basicFeatureExtractorDigit(datum)
-  return features
+    """
+    Specify features to use for the minicontest
+    """
+    features = basicFeatureExtractorDigit(datum)
+    return features
 
 def enhancedFeatureExtractorFace(datum):
-  """
-  Your feature extraction playground for faces.
-  It is your choice to modify this.
-  """
-  features =  basicFeatureExtractorFace(datum)
-  return features
+    """
+    Your feature extraction playground for faces.
+    It is your choice to modify this.
+    """
+    features = basicFeatureExtractorFace(datum)
+    return features
+
 
 def analysis(classifier, guesses, testLabels, testData, rawTestData, printImage):
-  """
-  This function is called after learning.
-  Include any code that you want here to help you analyze your results.
-  
-  Use the printImage(<list of pixels>) function to visualize features.
-  
-  An example of use has been given to you.
-  
-  - classifier is the trained classifier
-  - guesses is the list of labels predicted by your classifier on the test set
-  - testLabels is the list of true labels
-  - testData is the list of training datapoints (as util.Counter of features)
-  - rawTestData is the list of training datapoints (as samples.Datum)
-  - printImage is a method to visualize the features 
-  (see its use in the odds ratio part in runClassifier method)
-  
-  This code won't be evaluated. It is for your own optional use
-  (and you can modify the signature if you want).
-  """
-  
-  # Put any code here...
-  # Example of use:
-  for i in range(len(guesses)):
-      prediction = guesses[i]
-      truth = testLabels[i]
-      if (prediction != truth):
-          print "==================================="
-          print "Mistake on example %d" % i 
-          print "Predicted %d; truth is %d" % (prediction, truth)
-          print "Image: "
-          print rawTestData[i]
-          break
+    """
+    This function is called after learning.
+    Include any code that you want here to help you analyze your results.
+
+    Use the printImage(<list of pixels>) function to visualize features.
+
+    An example of use has been given to you.
+
+    - classifier is the trained classifier
+    - guesses is the list of labels predicted by your classifier on the test set
+    - testLabels is the list of true labels
+    - testData is the list of training datapoints (as util.Counter of features)
+    - rawTestData is the list of training datapoints (as samples.Datum)
+    - printImage is a method to visualize the features
+    (see its use in the odds ratio part in runClassifier method)
+
+    This code won't be evaluated. It is for your own optional use
+    (and you can modify the signature if you want).
+    """
+
+    # Put any code here...
+    # Example of use:
+    for i in range(len(guesses)):
+        prediction = guesses[i]
+        truth = testLabels[i]
+        if (prediction != truth):
+            print "==================================="
+            print "Mistake on example %d" % i
+            print "Predicted %d; truth is %d" % (prediction, truth)
+            print "Image: "
+            print rawTestData[i]
+            break
 
 
 ## =====================
@@ -158,8 +259,10 @@ class ImagePrinter:
             continue
       print image  
 
+
 def default(str):
   return str + ' [Default: %default]'
+
 
 def readCommand( argv ):
   "Processes the command used to run from the command line."
