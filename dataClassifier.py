@@ -324,7 +324,6 @@ USAGE_STRING = """
 # Main harness code
 
 def runClassifier(args, options):
-  t0 = time.time()
   featureFunction = args['featureFunction']
   classifier = args['classifier']
   printImage = args['printImage']
@@ -357,6 +356,7 @@ def runClassifier(args, options):
   
   # Conduct training and testing
   print "Training..."
+  t0 = time.time()
   classifier.train(trainingData, trainingLabels, validationData, validationLabels)
   t1 = time.time()
   print "Time: "+str(t1-t0)
